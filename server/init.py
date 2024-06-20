@@ -11,8 +11,6 @@ import time
 from PIL import Image
 import google.api_core.exceptions
 import google.generativeai as genai
-from flask import Flask, jsonify
-from flask_cors import CORS
 import mysql.connector
 from dotenv import load_dotenv
 from watchdog.observers import Observer
@@ -23,8 +21,6 @@ load_dotenv()
 genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 model = genai.GenerativeModel("gemini-1.5-flash")
 
-app = Flask(__name__)
-CORS(app)
 
 db_config = {
     "user": os.getenv("MYSQL_USER"),
@@ -42,20 +38,6 @@ def get_db_connection():
     Get a connection to the MySQL database.
     """
     return mysql.connector.connect(**db_config)
-
-
-@app.route("/api/test-db", methods=["GET"])
-def test_db():
-    """
-    Test the database connection.
-    """
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT 1")
-    result = cursor.fetchone()
-    cursor.close()
-    conn.close()
-    return jsonify(result)
 
 
 def analyze_image(image_path, max_retries=5, backoff_factor=2):
