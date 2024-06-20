@@ -1,0 +1,6 @@
+pillow
+google-generativeai
+flask
+flask-cors
+python-dotenv
+mysql-connector-python
