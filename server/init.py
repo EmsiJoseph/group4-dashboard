@@ -3,10 +3,9 @@
 
 # Standard libary imports
 import os
-import glob
 import json
 import time
-from datetime import datetime
+
 
 # Third-party library imports
 from PIL import Image
@@ -16,6 +15,8 @@ from flask import Flask, jsonify
 from flask_cors import CORS
 import mysql.connector
 from dotenv import load_dotenv
+from watchdog.observers import Observer
+from watchdog.events import FileSystemEventHandler
 
 load_dotenv()
 
@@ -32,6 +33,8 @@ db_config = {
     "port": os.getenv("MYSQL_PORT"),
     "database": os.getenv("MYSQL_DATABASE"),
 }
+
+IMAGE_FOLDER = "./images/"
 
 
 def get_db_connection():
@@ -85,20 +88,36 @@ def analyze_image(image_path, max_retries=5, backoff_factor=2):
             value 'none' to that field. For example, if the 'Street' label is
             blank, the 'street' field should be 'none' in the output JSON.
             3. Address Formatting:
-                - Verify address components for spelling and consistency within
-                the Philippines.
+                - Verify address components for spelling
             4. Here are the type of each labels:
                 name: string
                 gender: string (can be M or F, Male or Female)
+                but make the
+                format to Male or Female
                 civil_status: string (can be M for Married; Married, Separated)
-                date_of_birth: date (this should be a valid date)
-                religion: string
+                but make the format to Married, Widow, Separated or Single
+                date_of_birth: date (this should be a valid date) but make the
+                format to YYYY-MM-DD
+                religion: string (If the religion is in abbreviation, make
+                sure to spell it out for example RC is for Roman Catholic)
                 occupation: string
-                address: valid address from the Philippines
-                mobile_number: valid mobile number from the Philippines
+                address: Whatever it is that you can see in the image
+                and a valid place in the Philippines.
+                The province should be accurate
+                in the Philippines because we will
+                create a dropdown list for the provinces.
+                mobile_number: valid mobile number from the Philippines in
+                this format 09XXXXXXXXX and dont include special characters.
 
             5. AnswerExtraction: Extract answers to questions (Yes or No) based
             on the image content.
+            Make sure that the format of all the columns except for the answers
+            are in sentence case (except for the data that are numbers)
+            Make sure also that the name has a format of "Last Name, First
+            Name Middle Name". Make sure to map each data to the correct label
+            especially the name.
+
+
             """,
                     "**Example Structure:**",
                     """
@@ -183,29 +202,11 @@ def store_data_in_db(data):
             if key not in item:
                 item[key] = "none"
 
-        try:
-            date_of_birth = None
-            if "date_of_birth" in item:
-                dob_str = item["date_of_birth"]
-                for fmt in ("%m-%d-%Y", "%m/%d/%Y", "%b. %d, %Y", "%m/%d/%Y"):
-                    try:
-                        date_of_birth = datetime.strptime(dob_str, fmt)
-                        date_of_birth.strftime("%Y-%m-%d")
-                        break
-                    except ValueError:
-                        pass
-                if not date_of_birth:
-                    raise ValueError("Invalid date format")
-            else:
-                raise ValueError("No date_of_birth found")
-        except ValueError:
-            date_of_birth = "0000-00-00"
-
         values = (
             item["name"],
             item["gender"],
             item["civil_status"],
-            date_of_birth,
+            item["date_of_birth"],
             item["religion"],
             item["occupation"],
             item["address"]["number"],
@@ -233,23 +234,40 @@ def store_data_in_db(data):
     conn.close()
 
 
-image_paths = glob.glob("./images/*.jpg")
-analyze_data = [analyze_image(image_path) for image_path in image_paths]
-parsed_data = []
-for d in analyze_data:
-    cleaned_data = d.replace("```json", "").replace("```", "").strip()
-    if cleaned_data:
-        parsed_data.append(json.loads(cleaned_data))
+def process_image(image_path):
+    """
+    Process an image and extract information from it.
+
+    Args:
+        image_path (str): The path to the image file.
+    """
+    analyze_data = analyze_image(image_path)
+    cleaned_data = analyze_data.replace("```json", "").replace("```", "")
+    cleaned_data = cleaned_data.strip()
+    parsed_data = json.loads(cleaned_data)
+    store_data_in_db([parsed_data])
+    os.remove(image_path)
+    print(f"Processed and removed image: {image_path}")
 
 
-@app.route("/api/post-data", methods=["POST"])
-def post_data():
+class ImageHandler(FileSystemEventHandler):
     """
-    Post data to the database.
+    Event handler for processing images on file creation.
     """
-    store_data_in_db(parsed_data)
-    return jsonify({"message": "Data stored successfully"}), 200
+
+    def on_created(self, event):
+        if not event.is_directory and event.src_path.endswith(".jpg"):
+            process_image(event.src_path)
 
 
 if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0", port=5000)
+    observer = Observer()
+    event_handler = ImageHandler()
+    observer.schedule(event_handler, path=IMAGE_FOLDER, recursive=False)
+    observer.start()
+    try:
+        while True:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        observer.stop()
+    observer.join()
