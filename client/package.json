@@ -1,5 +1,5 @@
 {
-  "name": "client",
+  "name": "app",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -9,13 +9,28 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@nivo/bar": "^0.87.0",
+    "@nivo/core": "^0.87.0",
+    "@radix-ui/react-dialog": "^1.1.1",
+    "@radix-ui/react-slot": "^1.1.0",
+    "@radix-ui/react-switch": "^1.1.0",
+    "@radix-ui/react-toast": "^1.2.1",
+    "class-variance-authority": "^0.7.0",
+    "clsx": "^2.1.1",
     "dotenv": "^16.4.5",
+    "lucide-react": "^0.395.0",
     "mysql2": "^3.10.1",
     "next": "14.2.4",
+    "next-themes": "^0.3.0",
     "react": "^18",
-    "react-dom": "^18"
+    "react-dom": "^18",
+    "react-dropzone": "^14.2.3",
+    "sonner": "^1.5.0",
+    "tailwind-merge": "^2.3.0",
+    "tailwindcss-animate": "^1.0.7"
   },
   "devDependencies": {
+    "@types/formidable": "^3.4.5",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",

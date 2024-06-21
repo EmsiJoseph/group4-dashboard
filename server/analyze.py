@@ -1,13 +1,15 @@
 # Module docstring
 """Module for analyzing images and extracting information."""
 
-# Standard libary imports
+# Standard library imports
 import os
 import json
 import time
-
+from threading import Thread
 
 # Third-party library imports
+from flask import Flask, jsonify
+from flask_cors import CORS
 from PIL import Image
 import google.api_core.exceptions
 import google.generativeai as genai
@@ -16,11 +18,12 @@ from dotenv import load_dotenv
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 
+app = Flask(__name__)
+CORS(app)
 load_dotenv()
 
 genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 model = genai.GenerativeModel("gemini-1.5-flash")
-
 
 db_config = {
     "user": os.getenv("MYSQL_USER"),
@@ -31,6 +34,10 @@ db_config = {
 }
 
 IMAGE_FOLDER = "./images/"
+BATCH_INTERVAL = 5
+
+image_paths = []
+current_status = {"stage": "idle", "message": "Waiting for images..."}
 
 
 def get_db_connection():
@@ -223,33 +230,80 @@ def process_image(image_path):
     Args:
         image_path (str): The path to the image file.
     """
+    global current_status
+
+    current_status = {"stage": "analyzing", "message": "Analyzing images..."}
     analyze_data = analyze_image(image_path)
+    time.sleep(5)  # Simulate extracting data
+    current_status = {
+        "stage": "extracting",
+        "message": "Extracting data from images...",
+    }
     cleaned_data = analyze_data.replace("```json", "").replace("```", "")
     cleaned_data = cleaned_data.strip()
     parsed_data = json.loads(cleaned_data)
+    current_status = {
+        "stage": "storing",
+        "message": "Storing extracted data to database...",
+    }
     store_data_in_db([parsed_data])
-    os.remove(image_path)
+
     print(f"Processed and removed image: {image_path}")
+    current_status = {"stage": "idle", "message": "Waiting for images..."}
 
 
 class ImageHandler(FileSystemEventHandler):
     """
-    Event handler for processing images on file creation.
+    Handler for image events.
     """
 
     def on_created(self, event):
-        if not event.is_directory and event.src_path.endswith(".jpg"):
-            process_image(event.src_path)
+        if not event.is_directory and (
+            event.src_path.endswith(".jpg") or event.src_path.endswith(".png")
+        ):
+            image_paths.append(event.src_path)
 
 
-if __name__ == "__main__":
+def process_images_batch():
+    """
+    Process a batch of images.
+    """
+    global image_paths
+    if not image_paths:
+        return
+
+    print(f"Processing batch of {len(image_paths)} images")
+    for image_path in image_paths:
+        process_image(image_path)
+    image_paths = []
+
+
+@app.route("/status", methods=["GET"])
+def status():
+    """
+    Endpoint to get the current status of image processing.
+    """
+    return jsonify(current_status)
+
+
+def start_observer():
+    """
+    Start the observer to monitor the image folder for new images.
+    """
     observer = Observer()
     event_handler = ImageHandler()
     observer.schedule(event_handler, path=IMAGE_FOLDER, recursive=False)
     observer.start()
     try:
         while True:
-            time.sleep(1)
+            time.sleep(BATCH_INTERVAL)
+            process_images_batch()
     except KeyboardInterrupt:
         observer.stop()
     observer.join()
+
+
+if __name__ == "__main__":
+    observer_thread = Thread(target=start_observer)
+    observer_thread.start()
+    app.run(debug=True, host="0.0.0.0", port=5000)
