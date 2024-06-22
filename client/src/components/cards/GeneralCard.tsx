@@ -10,8 +10,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import GenderDistro from "./GenderDistro";
 
-const ResponsesDistribution = () => {
+const GeneralCard = () => {
   const { theme } = useTheme();
   const [data, setData] = useState<
     { question: string; yes: number; no: number }[]
@@ -127,86 +128,93 @@ const ResponsesDistribution = () => {
   return (
     <Card className="w-full">
       <CardHeader>
-        <CardTitle>Responses Distribution</CardTitle>
-        <CardDescription>
-          The distribution of "Yes" and "No" responses for each question.
-        </CardDescription>
+        <CardTitle>Overview</CardTitle>
+        <CardDescription>June 22, 2024 - June 29, 2024</CardDescription>
       </CardHeader>
       <CardContent className="w-full h-[400px]">
-        {loading ? (
-          <div className="skeleton-loader w-full h-full" />
-        ) : (
-          <ResponsiveBar
-            data={data}
-            keys={["yes", "no"]}
-            indexBy="question"
-            margin={{ top: 50, right: 130, bottom: 50, left: 60 }}
-            padding={0.3}
-            valueScale={{ type: "linear" }}
-            indexScale={{ type: "band", round: true }}
-            colors={{ scheme: "nivo" }}
-            theme={themeSettings}
-            axisTop={null}
-            axisRight={null}
-            axisBottom={{
-              tickSize: 5,
-              tickPadding: 5,
-              tickRotation: 0,
-              legend: "Questions",
-              legendPosition: "middle",
-              legendOffset: 42,
-              truncateTickAt: 0,
-            }}
-            axisLeft={{
-              tickSize: 5,
-              tickPadding: 5,
-              tickRotation: 0,
-              legend: "Responses",
-              legendPosition: "middle",
-              legendOffset: -50,
-              truncateTickAt: 0,
-            }}
-            labelSkipWidth={12}
-            labelSkipHeight={12}
-            labelTextColor={{
-              from: "color",
-              modifiers: [["darker", 1.6]],
-            }}
-            legends={[
-              {
-                dataFrom: "keys",
-                anchor: "bottom-right",
-                direction: "column",
-                justify: false,
-                translateX: 120,
-                translateY: 0,
-                itemsSpacing: 2,
-                itemWidth: 100,
-                itemHeight: 20,
-                itemDirection: "left-to-right",
-                itemOpacity: 0.85,
-                symbolSize: 20,
-                effects: [
+        <div className="grid grid-cols-5 gap-4 h-full">
+          <div className="col-span-4">
+            {loading ? (
+              <div className="skeleton-loader w-full h-full" />
+            ) : (
+              <ResponsiveBar
+                data={data}
+                keys={["yes", "no"]}
+                indexBy="question"
+                margin={{ top: 50, right: 130, bottom: 50, left: 60 }}
+                padding={0.3}
+                valueScale={{ type: "linear" }}
+                indexScale={{ type: "band", round: true }}
+                colors={{ scheme: "nivo" }}
+                theme={themeSettings}
+                axisTop={null}
+                axisRight={null}
+                axisBottom={{
+                  tickSize: 5,
+                  tickPadding: 5,
+                  tickRotation: 0,
+                  legend: "Questions",
+                  legendPosition: "middle",
+                  legendOffset: 42,
+                  truncateTickAt: 0,
+                }}
+                axisLeft={{
+                  tickSize: 5,
+                  tickPadding: 5,
+                  tickRotation: 0,
+                  legend: "Responses",
+                  legendPosition: "middle",
+                  legendOffset: -50,
+                  truncateTickAt: 0,
+                }}
+                labelSkipWidth={12}
+                labelSkipHeight={12}
+                labelTextColor={{
+                  from: "color",
+                  modifiers: [["darker", 1.6]],
+                }}
+                legends={[
                   {
-                    on: "hover",
-                    style: {
-                      itemOpacity: 1,
-                    },
+                    dataFrom: "keys",
+                    anchor: "bottom-right",
+                    direction: "column",
+                    justify: false,
+                    translateX: 120,
+                    translateY: 0,
+                    itemsSpacing: 2,
+                    itemWidth: 100,
+                    itemHeight: 20,
+                    itemDirection: "left-to-right",
+                    itemOpacity: 0.85,
+                    symbolSize: 20,
+                    effects: [
+                      {
+                        on: "hover",
+                        style: {
+                          itemOpacity: 1,
+                        },
+                      },
+                    ],
                   },
-                ],
-              },
-            ]}
-            motionConfig="stiff"
-            role="application"
-            ariaLabel="Nivo bar chart demo"
-            barAriaLabel={(e) =>
-              e.id + ": " + e.formattedValue + " in question: " + e.indexValue
-            }
-          />
-        )}
+                ]}
+                motionConfig="stiff"
+                role="application"
+                ariaLabel="Nivo bar chart demo"
+                barAriaLabel={(e) =>
+                  e.id +
+                  ": " +
+                  e.formattedValue +
+                  " in question: " +
+                  e.indexValue
+                }
+              />
+            )}
+          </div>
+          <GenderDistro />
+        </div>
       </CardContent>
     </Card>
   );
 };
 
-export default ResponsesDistribution;
+export default GeneralCard;

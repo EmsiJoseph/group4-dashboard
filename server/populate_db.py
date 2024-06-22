@@ -17,14 +17,7 @@ db_config = {
 }
 
 # Initialize Faker
-fake = Faker()
-
-
-def get_db_connection():
-    """
-    Get a connection to the MySQL database.
-    """
-    return mysql.connector.connect(**db_config)
+fake = Faker("fil_PH")
 
 
 def generate_philippine_mobile_number():
@@ -34,6 +27,13 @@ def generate_philippine_mobile_number():
     prefix = "09"
     number = "".join(random.choices("0123456789", k=9))
     return prefix + number
+
+
+def get_db_connection():
+    """
+    Get a connection to the MySQL database.
+    """
+    return mysql.connector.connect(**db_config)
 
 
 def generate_random_data():
@@ -57,10 +57,10 @@ def generate_random_data():
         "occupation": fake.job(),
         "address_number": fake.building_number(),
         "address_street": fake.street_name(),
-        "address_subdivision_barangay": fake.secondary_address(),
+        "address_subdivision_barangay": fake.address(),
         "address_municipality": fake.city(),
-        "address_province": fake.state(),
-        "address_zip_code": fake.zipcode(),
+        "address_province": fake.province(),
+        "address_zip_code": fake.postcode(),
         "mobile_number": generate_philippine_mobile_number(),
         "q1": random.choice(answers),
         "q2": random.choice(answers),
@@ -101,7 +101,7 @@ def insert_data_into_db(data):
 
 
 if __name__ == "__main__":
-    for _ in range(10000):
+    for _ in range(1000):
         data = generate_random_data()
         insert_data_into_db(data)
-    print("Inserted 1000 rows of random data into the database.")
+    print("Inserted 300 rows of random data into the database.")

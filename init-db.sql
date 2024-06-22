@@ -27,5 +27,6 @@ CREATE TABLE user_info (
     q7 VARCHAR(3),
     q8 VARCHAR(3),
     q9 VARCHAR(3),
-    q10 VARCHAR(3)
+    q10 VARCHAR(3),
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

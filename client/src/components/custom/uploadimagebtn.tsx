@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -11,14 +11,15 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import DropZone from "./dropzone";
-import { useToast } from "@/components/ui/use-toast";
-import { ToastProvider, Toast } from "@/components/ui/toast";
 import { Spinner } from "../ui/spinner";
+import { useToast } from "@/components/ui/use-toast";
 
 const UploadImageButton = () => {
   const [files, setFiles] = useState<File[] | null>(null);
   const [loading, setLoading] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
   const { toast } = useToast();
+  const previousStage = useRef("");
 
   const handleUpload = async () => {
     if (!files || files.length === 0) return;
@@ -28,19 +29,25 @@ const UploadImageButton = () => {
 
     try {
       setLoading(true);
-      toast({
-        title: "Uploading...",
-        description: "Uploading images. Please wait.",
-      });
 
-      const response = await fetch("http://localhost:5001/upload", {
+      const response = await fetch("http://localhost:5000/upload", {
         method: "POST",
         body: formData,
       });
+
       if (response.ok) {
         toast({
-          title: "Success",
-          description: "Files uploaded successfully. Analyzing...",
+          title: "Upload Success!",
+          description: "Image/s uploaded successfully. Analyzing...",
+        });
+        setFiles(null);
+        setDialogOpen(false);
+        startPolling();
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to upload files",
+          variant: "destructive",
         });
       }
     } catch (error) {
@@ -54,35 +61,54 @@ const UploadImageButton = () => {
     }
   };
 
+  const startPolling = () => {
+    const intervalId = setInterval(async () => {
+      try {
+        const response = await fetch("http://localhost:5000/status");
+        const status = await response.json();
+
+        if (status.stage !== previousStage.current && status.stage !== "Idle") {
+          toast({
+            title: status.stage,
+            description: status.message,
+          });
+          previousStage.current = status.stage;
+        }
+
+        if (status.stage === "Success!") {
+          clearInterval(intervalId);
+        }
+      } catch (error) {
+        console.error("Error fetching status:", error);
+      }
+    }, 3000);
+  };
+
   return (
-    <ToastProvider>
-      <Dialog onOpenChange={(open) => !open && setFiles(null)}>
-        <DialogTrigger asChild>
-          <Button variant="default">Upload Image</Button>
-        </DialogTrigger>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Upload Image</DialogTitle>
-            <DialogDescription>
-              Make sure the scanned form is in PNG or JPG and has a good
-              quality.
-            </DialogDescription>
-          </DialogHeader>
-          {loading ? (
-            <div className="flex items-center justify-center h-64">
-              <Spinner size="large">Uploading...</Spinner>
-            </div>
-          ) : (
-            <DropZone
-              files={files}
-              setFiles={setFiles}
-              handleUpload={handleUpload}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
-      <Toast />
-    </ToastProvider>
+    <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+      <DialogTrigger asChild>
+        <Button variant="default">Upload Image</Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Upload Image</DialogTitle>
+          <DialogDescription>
+            Make sure the scanned form is in PNG or JPG and has a good quality.
+          </DialogDescription>
+        </DialogHeader>
+        {loading ? (
+          <div className="flex items-center justify-center h-64">
+            <Spinner size="large">Uploading...</Spinner>
+          </div>
+        ) : (
+          <DropZone
+            files={files}
+            setFiles={setFiles}
+            handleUpload={handleUpload}
+          />
+        )}
+      </DialogContent>
+    </Dialog>
   );
 };
 

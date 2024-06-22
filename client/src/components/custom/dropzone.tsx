@@ -9,6 +9,7 @@ import {
   FileInput,
 } from "@/components/ui/imageupload";
 import { Paperclip } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
 
 const FileSvgDraw = () => {
   return (
@@ -49,6 +50,8 @@ const DropZone = ({
   handleUpload: () => void;
 }) => {
   const { theme } = useTheme();
+
+  const { toast } = useToast();
 
   const dropZoneConfig = {
     accept: {
@@ -93,7 +96,9 @@ const DropZone = ({
 
             <Button
               variant="default"
-              onClick={handleUpload}
+              onClick={() => {
+                handleUpload();
+              }}
               disabled={!files || files.length === 0}
             >
               {files && files.length > 1 ? "Upload Images" : "Upload Image"}

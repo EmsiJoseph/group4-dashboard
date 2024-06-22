@@ -2,6 +2,7 @@ import "@/styles/globals.css";
 import { Inter as FontSans } from "next/font/google";
 import { cn } from "@/lib/utils";
 import { ThemeProvider } from "next-themes";
+import { Toaster } from "@/components/ui/toaster";
 
 const fontSans = FontSans({
   subsets: ["latin"],
@@ -26,6 +27,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
           <main className="grid h-full">
             <div className="p-8">{children}</div>
           </main>
+          <Toaster />
         </ThemeProvider>
       </body>
     </html>

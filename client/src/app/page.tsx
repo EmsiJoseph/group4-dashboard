@@ -1,26 +1,35 @@
-import ResponsesDistribution from "@/components/cards/ResponsesDistribution";
-import { Card } from "@/components/ui/card";
+"use client";
+
+import { useState } from "react";
+import GeneralCard from "@/components/cards/GeneralCard";
 import DarkModeToggle from "@/components/custom/darkmodetoggle";
 import UploadImageButton from "@/components/custom/uploadimagebtn";
+import ReloadGraphButton from "@/components/custom/reloadgraphsbtn";
 import { ToastProvider, Toast } from "@/components/ui/toast";
+import MapCard from "@/components/cards/MapCard";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 export default function Home() {
+  const [reloadGraph, setReloadGraph] = useState(false);
+
+  const handleReloadClick = () => {
+    setReloadGraph(!reloadGraph);
+  };
+
   return (
-    <ToastProvider>
-      <div>
-        <header className="p-4 flex justify-end space-x-4">
-          <UploadImageButton />
-          <DarkModeToggle />
-        </header>
-        <div className="grid grid-cols-2 gap-[32px]">
-          <ResponsesDistribution />
-          <div className="grid gap-[32px]">
-            <Card />
-            <Card />
-          </div>
+    <TooltipProvider>
+      <ToastProvider>
+        <div>
+          <header className="p-4 flex justify-end space-x-4">
+            <ReloadGraphButton onClick={handleReloadClick} />
+            <UploadImageButton />
+            <DarkModeToggle />
+          </header>
+          {reloadGraph ? <GeneralCard key={1} /> : <GeneralCard key={2} />}
+          <MapCard />
         </div>
-      </div>
-      <Toast />
-    </ToastProvider>
+        <Toast />
+      </ToastProvider>
+    </TooltipProvider>
   );
 }
