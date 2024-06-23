@@ -26,7 +26,6 @@ export default function Home() {
             <DarkModeToggle />
           </header>
           {reloadGraph ? <GeneralCard key={1} /> : <GeneralCard key={2} />}
-          <MapCard />
         </div>
         <Toast />
       </ToastProvider>

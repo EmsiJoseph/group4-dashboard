@@ -1,21 +1,20 @@
-import mysql from "mysql2/promise";
+import { Pool } from "pg";
 
-const pool = mysql.createPool({
-  host: process.env.MYSQL_HOST,
-  user: process.env.MYSQL_USER,
-  password: process.env.MYSQL_ROOT_PASSWORD,
-  database: process.env.MYSQL_DATABASE,
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0,
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL, 
 });
 
 export async function query(q: string, values: any[] = []) {
   try {
     console.log("Connecting to database...");
-    const [results] = await pool.query(q, values);
-    console.log("Database query successful:", results);
-    return results;
+    const client = await pool.connect();
+    try {
+      const res = await client.query(q, values);
+      console.log("Database query successful:", res.rows);
+      return res.rows;
+    } finally {
+      client.release();
+    }
   } catch (error) {
     console.error("Database query error:", error);
     throw error;

@@ -8,11 +8,11 @@ services:
       MYSQL_DATABASE: ${MYSQL_DATABASE}
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_BIND_ADDRESS: 0.0.0.0
     ports:
       - "3306:3306"
     volumes:
       - db_data:/var/lib/mysql
-      - init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin

@@ -30,7 +30,7 @@ const UploadImageButton = () => {
     try {
       setLoading(true);
 
-      const response = await fetch("http://localhost:5000/upload", {
+      const response = await fetch("https://reimagined-fishstick-wrrqrr67x6625g6q-5001.app.github.dev/upload", {
         method: "POST",
         body: formData,
       });
@@ -64,7 +64,7 @@ const UploadImageButton = () => {
   const startPolling = () => {
     const intervalId = setInterval(async () => {
       try {
-        const response = await fetch("http://localhost:5000/status");
+        const response = await fetch("https://reimagined-fishstick-wrrqrr67x6625g6q-5000.app.github.dev/status");
         const status = await response.json();
 
         if (status.stage !== previousStage.current && status.stage !== "Idle") {

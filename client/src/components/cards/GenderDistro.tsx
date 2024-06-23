@@ -17,7 +17,7 @@ export default function GenderDistro() {
   const [totalCount, setTotalCount] = useState(0);
 
   useEffect(() => {
-    fetch("http://localhost:3000/api/gender-data")
+    fetch("/api/gender-data")
       .then((response) => response.json())
       .then((data) => {
         const result = data[0]; // Assuming data is an array with one object
