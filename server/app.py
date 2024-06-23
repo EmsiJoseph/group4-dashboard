@@ -1,12 +1,12 @@
 # Module docstring
 """Module for uploading and analyzing images, and extracting information."""
-
+ 
 # Standard library imports
 import os
 import json
 import time
 import threading
-
+ 
 # Third-party library imports
 from flask import Flask, jsonify, request
 from flask_cors import CORS
@@ -17,55 +17,55 @@ import mysql.connector
 from dotenv import load_dotenv
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
-
+ 
 app = Flask(__name__)
 CORS(app)
 load_dotenv()
-
+ 
 genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 model = genai.GenerativeModel("gemini-1.5-flash")
-
+ 
 db_config = {
-    "user": os.getenv("MYSQL_USER"),
-    "password": os.getenv("MYSQL_PASSWORD"),
-    "host": os.getenv("MYSQL_HOST"),
-    "port": os.getenv("MYSQL_PORT"),
-    "database": os.getenv("MYSQL_DATABASE"),
+    "user":"root",
+    "password": "root",
+    "host":"localhost",
+    "port": "3306",
+    "database": "form_data",
 }
-
+ 
 IMAGE_FOLDER = "./images/"
 BATCH_INTERVAL = 5
-
+ 
 # Directory where images will be saved
-
+ 
 UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), "images")
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
-
+ 
 # Allowed extensions
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg"}
-
+ 
 image_paths = []
 current_status = {
     "stage": "Idle",
     "message": "Waiting for images...",
 }
-
-
+ 
+ 
 def get_db_connection():
     """
     Get a connection to the MySQL database.
     """
     return mysql.connector.connect(**db_config)
-
-
+ 
+ 
 def analyze_image(image_path, max_retries=5, backoff_factor=2):
     """
     Analyze an image and extract relevant information.
-
+ 
     Args:
         image_path (str): The path to the image file.
-
+ 
     Returns:
         dict: Extracted information from the image.
     """
@@ -112,7 +112,7 @@ def analyze_image(image_path, max_retries=5, backoff_factor=2):
                 create a dropdown list for the provinces.
                 mobile_number: valid mobile number from the Philippines in
                 this format 09XXXXXXXXX and dont include special characters.
-
+ 
             5. AnswerExtraction: Extract answers to questions (Yes or No) based
             on the image content.
             Make sure that the format of all the columns except for the answers
@@ -120,8 +120,8 @@ def analyze_image(image_path, max_retries=5, backoff_factor=2):
             Make sure also that the name has a format of "Last Name, First
             Name Middle Name". Make sure to map each data to the correct label
             especially the name.
-
-
+ 
+ 
             """,
                     "**Example Structure:**",
                     """
@@ -175,8 +175,8 @@ def analyze_image(image_path, max_retries=5, backoff_factor=2):
         except Exception as e:
             print("An error occurred while analyzing the image:", str(e))
             raise e
-
-
+ 
+ 
 def store_data_in_db(data):
     """
     Store data in the database.
@@ -209,7 +209,7 @@ def store_data_in_db(data):
         for key in required_keys:
             if key not in item:
                 item[key] = "none"
-
+ 
         values = (
             item["name"],
             item["gender"],
@@ -240,22 +240,23 @@ def store_data_in_db(data):
     conn.commit()
     cursor.close()
     conn.close()
-
-
+ 
+ 
 def process_image(image_path):
     """
     Process an image and extract information from it.
-
+ 
     Args:
         image_path (str): The path to the image file.
     """
     global current_status
-
+ 
     current_status = {
         "stage": "Analyzation process",
         "message": "Analyzing image/s...",
     }
     analyze_data = analyze_image(image_path)
+    time.sleep(5)
     current_status = {
         "stage": "Extraction process",
         "message": "Extracting data from image/s...",
@@ -263,32 +264,34 @@ def process_image(image_path):
     cleaned_data = analyze_data.replace("```json", "").replace("```", "")
     cleaned_data = cleaned_data.strip()
     parsed_data = json.loads(cleaned_data)
+    time.sleep(5)
     current_status = {
         "stage": "Storing process",
         "message": "Storing extracted data to database...",
     }
     store_data_in_db([parsed_data])
-
+    time.sleep(5)
+ 
     print(f"Processed and removed image: {image_path}")
     image_name = os.path.basename(image_path)
     current_status = {
         "stage": "Nice one!",
         "message": "Successfully processed image " + image_name,
     }
-
-
+ 
+ 
 class ImageHandler(FileSystemEventHandler):
     """
     Handler for image events.
     """
-
+ 
     def on_created(self, event):
         if not event.is_directory and (
             event.src_path.endswith(".jpg") or event.src_path.endswith(".png")
         ):
             image_paths.append(event.src_path)
-
-
+ 
+ 
 def process_images_batch():
     """
     Process a batch of images.
@@ -297,7 +300,7 @@ def process_images_batch():
     global image_paths
     if not image_paths:
         return
-
+ 
     print(f"Processing batch of {len(image_paths)} images")
     for image_path in image_paths:
         process_image(image_path)
@@ -308,60 +311,60 @@ def process_images_batch():
         "stage": "Sucess!",
         "message": "Process completed, please reload the dashboard.",
     }
-
-
+ 
+ 
 @app.route("/status", methods=["GET"])
 def status():
     """
     Endpoint to get the current status of image processing.
     """
     return jsonify(current_status)
-
-
+ 
+ 
 @app.route("/upload", methods=["POST"])
 def upload_file():
     """
     Handle file upload and save files to the upload directory.
-
+ 
     Returns:
         response: JSON response with the status of the upload.
     """
     if "files" not in request.files:
         return jsonify({"error": "No file part"}), 400
-
+ 
     files = request.files.getlist("files")
     saved_files = []
-
+ 
     for file in files:
         if file and allowed_file(file.filename):
             filename = file.filename
             file_path = os.path.join(UPLOAD_FOLDER, filename)
             file.save(file_path)
             saved_files.append(filename)
-
+ 
     if not saved_files:
         return jsonify({"error": "No valid files uploaded"}), 400
-
+ 
     return (
         jsonify({"message": "Files uploaded", "files": saved_files}),
         200,
     )
-
-
+ 
+ 
 def allowed_file(filename):
     """
     Check if the file has an allowed extension.
-
+ 
     Args:
         filename (str): The name of the file.
-
+ 
     Returns:
         bool: True if the file has an allowed extension, False otherwise.
     """
     file_extension = filename.rsplit(".", 1)[1].lower()
     return "." in filename and file_extension in ALLOWED_EXTENSIONS
-
-
+ 
+ 
 def start_observer():
     """
     Start the observer to monitor the image folder for new images.
@@ -382,9 +385,10 @@ def start_observer():
         "stage": "Idle",
         "message": "Waiting for images...",
     }
-
-
+ 
+ 
 if __name__ == "__main__":
     observer_thread = threading.Thread(target=start_observer, daemon=True)
     observer_thread.start()
     app.run(debug=True, host="0.0.0.0", port=5000)
+ 

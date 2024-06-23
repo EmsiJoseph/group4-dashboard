@@ -2,12 +2,12 @@
 
 import { useState } from "react";
 import GeneralCard from "@/components/cards/GeneralCard";
+import ReligionCard from "@/components/cards/ReligionCard"; // Import the ReligionCard component
 import DarkModeToggle from "@/components/custom/darkmodetoggle";
 import UploadImageButton from "@/components/custom/uploadimagebtn";
 import ReloadGraphButton from "@/components/custom/reloadgraphsbtn";
 import { ToastProvider, Toast } from "@/components/ui/toast";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import MapCard from "@/components/cards/MapCard";
 
 export default function Home() {
   const [reloadGraph, setReloadGraph] = useState(false);
@@ -26,7 +26,7 @@ export default function Home() {
             <DarkModeToggle />
           </header>
           {reloadGraph ? <GeneralCard key={1} /> : <GeneralCard key={2} />}
-          <MapCard />
+          <ReligionCard /> {/* Add the ReligionCard component here */}
         </div>
         <Toast />
       </ToastProvider>

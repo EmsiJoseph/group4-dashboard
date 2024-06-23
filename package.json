@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "@nivo/treemap": "^0.87.0"
+  }
+}
