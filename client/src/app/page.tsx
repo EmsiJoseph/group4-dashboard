@@ -6,8 +6,8 @@ import DarkModeToggle from "@/components/custom/darkmodetoggle";
 import UploadImageButton from "@/components/custom/uploadimagebtn";
 import ReloadGraphButton from "@/components/custom/reloadgraphsbtn";
 import { ToastProvider, Toast } from "@/components/ui/toast";
-import MapCard from "@/components/cards/MapCard";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import MapCard from "@/components/cards/MapCard";
 
 export default function Home() {
   const [reloadGraph, setReloadGraph] = useState(false);

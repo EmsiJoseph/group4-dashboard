@@ -10,7 +10,7 @@ load_dotenv()
 # Configure database connection
 db_config = {
     "user": os.getenv("MYSQL_USER"),
-    "password": os.getenv("MYSQL_PASSWORD"),
+    "password": os.getenv("MYSQL_ROOT_PASSWORD"),
     "host": os.getenv("MYSQL_HOST"),
     "port": os.getenv("MYSQL_PORT"),
     "database": os.getenv("MYSQL_DATABASE"),
@@ -104,4 +104,4 @@ if __name__ == "__main__":
     for _ in range(1000):
         data = generate_random_data()
         insert_data_into_db(data)
-    print("Inserted 300 rows of random data into the database.")
+    print("Inserted 1000 rows of random data into the database.")
