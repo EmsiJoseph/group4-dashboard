@@ -7,7 +7,7 @@ import UploadImageButton from "@/components/custom/uploadimagebtn";
 import ReloadGraphButton from "@/components/custom/reloadgraphsbtn";
 import { ToastProvider, Toast } from "@/components/ui/toast";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import MapCard from "@/components/cards/MapCard";
+import AgeCard from '@/components/cards/AgeCard'; 
 
 export default function Home() {
   const [reloadGraph, setReloadGraph] = useState(false);
@@ -26,7 +26,7 @@ export default function Home() {
             <DarkModeToggle />
           </header>
           {reloadGraph ? <GeneralCard key={1} /> : <GeneralCard key={2} />}
-          <MapCard />
+          <AgeCard /> {/* Added AgeCard component here */}
         </div>
         <Toast />
       </ToastProvider>

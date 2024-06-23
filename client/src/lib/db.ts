@@ -2,9 +2,9 @@ import mysql from "mysql2/promise";
 
 const pool = mysql.createPool({
   host: process.env.MYSQL_HOST,
-  user: process.env.MYSQL_USER,
-  password: process.env.MYSQL_ROOT_PASSWORD,
-  database: process.env.MYSQL_DATABASE,
+  user: "root",
+  password: "nkEXq4uy6BioUPRu@gz3QgSicc@GMbOm@U_pJtc",
+  database: "form_data",
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
@@ -20,4 +20,9 @@ export async function query(q: string, values: any[] = []) {
     console.error("Database query error:", error);
     throw error;
   }
+}
+
+export interface AgeGroupData {
+  age_group: string;
+  count: number;
 }
